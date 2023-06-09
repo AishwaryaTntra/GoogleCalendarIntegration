@@ -11,6 +11,10 @@
   </head>
 
   <body>
+    <p class="alert" style="color: red"><%= alert %></p>
+    <% if current_user.present? %>
+      <%= button_to( "Log Out", destroy_user_session_path, method: :delete ) %>
+    <% end %>
     <%= yield %>
   </body>
 </html>
