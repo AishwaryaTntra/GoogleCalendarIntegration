@@ -1,0 +1,34 @@
+<p style="color: green"><%= notice %></p>
+
+<h1>Events</h1>
+
+<div id="events">
+  <table>
+    <% if @events.nil? %>
+      <p> No Data Fetched </p>
+    <% else %>
+      <tr>
+        <th>Title</th>
+        <th>Creator</th>
+        <th>At</th>
+        <th>Actions</th>
+      </tr>
+    <% end %>
+    <% @events = [] if @events.nil? %>
+    <% @events.each do |event| %>
+      <tr>
+        <td><%= event[:summary] %></td>
+        <td><%= event[:creator][:email] %></td>
+        <td><%= event[:start][:date_time].strftime("%d-%m-%Y at %I:%M%p") %></td>
+        <td><%= link_to 'View', event_path(event[:id]) %></td>
+        <td><%= link_to "Delete", event_path(event[:id]), data: {
+                    turbo_method: :delete,
+                    turbo_confirm: "Are you sure?"
+                  } %> </td>
+      </tr>
+    <% end %>
+      
+  </table>
+</div>
+
+<%= link_to "New event", new_event_path %>

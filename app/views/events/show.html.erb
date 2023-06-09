@@ -1,0 +1,30 @@
+<p style="color: green"><%= notice %></p>
+
+<h3><%= @event[:summary] %></h3><br><br>
+
+<p><b>Description:</b> <%= @event[:description] %> </p><br>
+
+<p><b>Created By:</b> <%= @event[:creator][:email] %> </p>
+
+<b>Attendees:</b>
+<table>
+  <tr>
+    <th>Email</th>
+    <th>Response</th>
+  </tr>
+  <% if @event[:attendees].present? %> 
+    <% @event[:attendees].each do |attendee| %>
+      <tr>
+        <td><%= attendee[:email] %></td>
+        <td><%= attendee[:response_status].underscore.split('_').join(' ').capitalize %></td>
+      </tr>
+    <% end %>
+  <% end %>
+</table>
+
+<div>
+  <%= link_to "Back to events", events_path %> | <%= link_to "Delete this event", event_path(@event[:id]), data: {
+                    turbo_method: :delete,
+                    turbo_confirm: "Are you sure?"
+                  } %>
+</div>
