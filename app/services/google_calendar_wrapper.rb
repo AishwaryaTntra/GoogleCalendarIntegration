@@ -48,6 +48,37 @@ class GoogleCalendarWrapper
     end
   end
 
+  def create_calendar_event(event, opts = {})
+    unless event.is_a?(Hash) && (event.key?(:summary) || event.key?(:description) || event.key?(:start_date) || event.key?(:end_date) || event.key?(:attendees))
+      return 'Pass Event Properly'
+    end
+
+    event_object = set_event_object(event, opts)
+    cal_event = Google::Apis::CalendarV3::Event.new(**event_object)
+    handle_google_api_errors do
+      @client.insert_event('primary', cal_event, send_updates: 'all', send_notifications: true,
+                                                 conference_data_version: 1)
+    end
+  end
+
+  def cancel_event(event_id)
+    handle_google_api_errors do
+      @client.delete_event('primary', event_id, send_notifications: true, send_updates: 'all')
+    end
+  end
+
+  def handle_google_api_errors
+    yield
+  rescue Google::Apis::ServerError => e
+    e.to_s
+  rescue Google::Apis::ClientError => e
+    e.to_s
+  rescue Google::Apis::AuthorizationError => e
+    e.to_s
+  end
+
+  private
+
   def set_event_object(event, options)
     event_obj = {
       summary: event[:summary], description: event[:description],
@@ -63,29 +94,6 @@ class GoogleCalendarWrapper
     return event_obj unless options[:conference_data].present?
 
     create_conference_data(options[:conference_data], event_obj)
-  end
-
-  def create_calendar_event(event, opts = {})
-    unless event.is_a?(Hash) && (event.key?(:summary) || event.key?(:description) || event.key?(:start_date) || event.key?(:end_date) || event.key?(:attendees))
-      return 'Pass Event Properly'
-    end
-
-    event_object = set_event_object(event, opts)
-    cal_event = Google::Apis::CalendarV3::Event.new(**event_object)
-    handle_google_api_errors do
-      @client.insert_event('primary', cal_event, send_updates: 'all', send_notifications: true,
-                                                 conference_data_version: 1)
-    end
-  end
-
-  def create_attendees(event, event_obj)
-    attendees_list = []
-    event[:attendees].each do |attendee|
-      attendees_list << Google::Apis::CalendarV3::EventAttendee.new(
-        email: attendee
-      )
-    end
-    event_obj.merge!(attendees: attendees_list)
   end
 
   def customize_event(event, opts)
@@ -109,25 +117,19 @@ class GoogleCalendarWrapper
     opts.merge!(reminders: remainder_hash)
   end
 
+  def create_attendees(event, event_obj)
+    attendees_list = []
+    event[:attendees].each do |attendee|
+      attendees_list << Google::Apis::CalendarV3::EventAttendee.new(
+        email: attendee
+      )
+    end
+    event_obj.merge!(attendees: attendees_list)
+  end
+
   def create_conference_data(conf_data, event_obj)
     meeting_data = Google::Apis::CalendarV3::ConferenceData.new(**conf_data)
     event_obj[:conference_data] = meeting_data
     event_obj
-  end
-
-  def cancel_event(event_id)
-    handle_google_api_errors do
-      @client.delete_event('primary', event_id, send_notifications: true, send_updates: 'all')
-    end
-  end
-
-  def handle_google_api_errors
-    yield
-  rescue Google::Apis::ServerError => e
-    e.to_s
-  rescue Google::Apis::ClientError => e
-    e.to_s
-  rescue Google::Apis::AuthorizationError => e
-    e.to_s
   end
 end
