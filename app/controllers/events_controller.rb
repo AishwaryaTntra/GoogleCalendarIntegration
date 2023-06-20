@@ -3,11 +3,12 @@
 # app > controllers > events_controller
 class EventsController < ApplicationController
   def index
-    result = GoogleCalendarWrapper.new(current_user).current_users_events
+    result = GoogleCalendarWrapper.new(current_user).current_users_events(params[:format])
     handle_authentication_error(result)
     if result.is_a?(String)
       flash.now[:alert] = "Please try again. There seems to be a #{result} error."
     else
+      @page_token = result.to_h[:next_page_token]
       @events = result.to_h[:items]
       @events.uniq! { |event| event[:summary] }
     end
@@ -52,7 +53,6 @@ class EventsController < ApplicationController
             "type": "hangoutsMeet"
           },
           "request_id": SecureRandom.alphanumeric
-          # "request_id": ""
         }
       }
     }

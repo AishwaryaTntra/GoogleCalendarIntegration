@@ -36,9 +36,9 @@ class GoogleCalendarWrapper
     @client
   end
 
-  def current_users_events
+  def current_users_events(page_token = nil)
     handle_google_api_errors do
-      @client.list_events('primary', always_include_email: true, single_events: true, max_results: 9999)
+      @client.list_events('primary', always_include_email: true, single_events: true, max_results: 9999, page_token: page_token)
     end
   end
 
@@ -49,9 +49,7 @@ class GoogleCalendarWrapper
   end
 
   def create_calendar_event(event, opts = {})
-    unless event.is_a?(Hash) && (event.key?(:summary) || event.key?(:description) || event.key?(:start_date) || event.key?(:end_date) || event.key?(:attendees))
-      return 'Pass Event Properly'
-    end
+    return 'Pass Event Properly' unless event.is_a?(Hash) && (event.key?(:summary) || event.key?(:description) || event.key?(:start_date) || event.key?(:end_date) || event.key?(:attendees))
 
     event_object = set_event_object(event, opts)
     cal_event = Google::Apis::CalendarV3::Event.new(**event_object)
